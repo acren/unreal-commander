@@ -3,13 +3,11 @@
   "formatter": {
     "dotnet-csharp": {
       "command": [
-        "powershell",
+        "pwsh",
         "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "Build/Format.ps1",
-        "-Include",
+        "-NonInteractive",
+        "-CommandWithArgs",
+        "$ErrorActionPreference = 'Stop'; dotnet format UnrealCommander.sln --include (Resolve-Path -LiteralPath $args[0] -Relative); exit $LASTEXITCODE",
         "$FILE"
       ],
       "extensions": [
