@@ -29,7 +29,7 @@ namespace LocalAutomation.Extensions.Unreal.Operations.BaseOperations
                 .Concat(new[]
                 {
                     typeof(BuildConfigurationOptions),
-                    typeof(BuildOptions),
+                    typeof(UbtOptions),
                     typeof(UbtCompilerOptions)
                 });
         }
@@ -81,8 +81,16 @@ namespace LocalAutomation.Extensions.Unreal.Operations.BaseOperations
             Arguments args = CreateBuildArguments(operationParameters);
             Engine engine = GetRequiredTargetEngineInstall(operationParameters);
             UbtCompilerOptions compilerOptions = operationParameters.GetOptions<UbtCompilerOptions>();
+            UbtOptions ubtOptions = operationParameters.GetOptions<UbtOptions>();
             string? clangToolchainRoot = UbtArguments.ApplySharedBuildArguments(args, engine,
-                compilerOptions.Compiler, compilerOptions.CppStandard, operationParameters.GetOptions<BuildOptions>().NoHotReload);
+                compilerOptions.Compiler, compilerOptions.CppStandard, ubtOptions.NoHotReload);
+
+            // Apply header regeneration to every direct target build, including plugin and deployment builds.
+            if (ubtOptions.ForceHeaderGeneration)
+            {
+                args.SetFlag("ForceHeaderGeneration");
+            }
+
             Command command = new(engine.GetBuildPath(), args.ToString());
             if (!string.IsNullOrWhiteSpace(clangToolchainRoot))
             {

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using LocalAutomation.Commands;
 using LocalAutomation.Extensions.Unreal.Operations.OperationOptionTypes;
 using LocalAutomation.Extensions.Unreal.Unreal;
@@ -23,15 +22,6 @@ namespace LocalAutomation.Extensions.Unreal.Operations.BaseOperations
         protected BuildCookRunProjectOperationBase()
         {
             UseExecutionBehavior(new CommandProcessBehavior(BuildCommand, UnrealCommandProcessPolicy.Instance, GetExecutionRetryPolicy));
-        }
-
-        /// <summary>
-        /// BuildCookRun operations expose build behavior for requests that include compilation.
-        /// </summary>
-        protected override IEnumerable<Type> GetDeclaredOptionSetTypes(IOperationTarget target)
-        {
-            return base.GetDeclaredOptionSetTypes(target)
-                .Concat(new[] { typeof(BuildOptions) });
         }
 
         /// <summary>
@@ -88,8 +78,24 @@ namespace LocalAutomation.Extensions.Unreal.Operations.BaseOperations
             Engine engine = GetRequiredTargetEngineInstall(operationParameters);
             Project project = GetRequiredTarget(operationParameters);
             BuildCookRunProjectRequest request = GetBuildCookRunRequest(operationParameters);
+            /* UAT forwards ubtargs to cooked game/server targets, not editor targets. Only operations that declare
+               UBT options may consume them; inherited parameter values must not affect editor-only builds. */
+            UbtOptions? ubtOptions = null;
+            if (request.HasPhase(BuildCookRunProjectPhases.Build))
+            {
+                operationParameters.TryGetOptions(out ubtOptions);
+            }
+
             Arguments arguments = UATArguments.CreateBuildCookRunArguments(project.Model, engine, request,
-                request.HasPhase(BuildCookRunProjectPhases.Build) && operationParameters.GetOptions<BuildOptions>().NoHotReload);
+                ubtOptions?.NoHotReload == true);
+
+            // UAT accepts one ubtargs value, so combine regeneration with any other generated UBT switches.
+            if (ubtOptions?.ForceHeaderGeneration == true)
+            {
+                string ubtArguments = arguments.GetArgument("ubtargs")?.Value ?? string.Empty;
+                arguments.SetKeyValue("ubtargs", $"{ubtArguments} -ForceHeaderGeneration".Trim());
+            }
+
             return new Command(engine.GetRunUATPath(), arguments.ToString());
         }
     }

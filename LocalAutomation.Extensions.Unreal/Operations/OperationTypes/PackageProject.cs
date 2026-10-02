@@ -14,8 +14,8 @@ namespace LocalAutomation.Extensions.Unreal.Operations.OperationTypes
     public class PackageProject : BuildCookRunProjectOperationBase
     {
         /// <summary>
-        /// Project packaging always exposes archive and cooker settings because the generated UAT request depends on
-        /// both option groups.
+        /// Project packaging exposes archive and cooker settings plus build options for its game/server compilation,
+        /// which receives UAT's forwarded UBT arguments.
         /// </summary>
         protected override System.Collections.Generic.IEnumerable<System.Type> GetDeclaredOptionSetTypes(global::LocalAutomation.Runtime.IOperationTarget target)
         {
@@ -23,6 +23,7 @@ namespace LocalAutomation.Extensions.Unreal.Operations.OperationTypes
                 .Concat(new[]
                 {
                     typeof(BuildConfigurationOptions),
+                    typeof(UbtOptions),
                     typeof(PackageOptions),
                     typeof(CookOptions)
                 });

@@ -11,8 +11,8 @@ namespace LocalAutomation.Extensions.Unreal.Operations.OperationTypes
     public class BuildEditor : BuildCookRunProjectOperationBase
     {
         /// <summary>
-        /// BuildCookRun editor builds only need build configuration selection now that the shared BuildCookRun base no
-        /// longer inspects package options on behalf of concrete operations.
+        /// Editor-only BuildCookRun requests expose configuration but no UBT build options because UAT does not
+        /// forward ubtargs to editor targets.
         /// </summary>
         protected override System.Collections.Generic.IEnumerable<System.Type> GetDeclaredOptionSetTypes(global::LocalAutomation.Runtime.IOperationTarget target)
         {
